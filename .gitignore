@@ -1,0 +1,15 @@
+node_modules
+dist
+*.local
+.DS_Store
+.env*
+
+# 内部素材与文档（不入库）
+article/
+.trae/
+V2.0-市场分析与改进方案.md
+竞品调研与功能优化方案.md
+
+.iga/
+test-results/
+playwright-report/
