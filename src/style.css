@@ -449,10 +449,12 @@ body::after {
   }
 }
 
-/* 首屏右侧竖排批注（手稿气质，仅宽屏） */
+/* 首屏右侧竖排批注（对联式两列，右起左读，仅宽屏）：
+   vertical-rl 的 line-height 即列宽，2.4 让两列留出批注间距 */
 .vertical-note {
   writing-mode: vertical-rl;
   letter-spacing: 0.4em;
+  line-height: 2.4;
 }
 
 /* 量化评分章：点击展开扣分明细 */

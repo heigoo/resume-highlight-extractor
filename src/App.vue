@@ -1042,10 +1042,11 @@ function onFormat(enforceSources = false) {
 
         <div class="relative mt-10 sm:mt-14">
           <p
-            class="vertical-note reveal d2 absolute -top-1 right-0 hidden text-[13px] leading-none text-ink-faint select-none xl:block"
+            class="vertical-note reveal d2 absolute -top-1 right-0 hidden text-[13px] text-ink-faint select-none xl:block"
             aria-hidden="true"
           >
-            凡流水账，皆可点铁成金
+            <span class="block whitespace-nowrap">凡流水账</span>
+            <span class="block whitespace-nowrap">皆可点铁成金</span>
           </p>
           <h2
             class="reveal d1 max-w-3xl font-display text-2xl leading-snug font-bold text-ink sm:text-4xl sm:leading-[1.35]"
