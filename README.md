@@ -3,6 +3,8 @@
 [![CI](https://github.com/heigoo/resume-highlight-extractor/actions/workflows/ci.yml/badge.svg)](https://github.com/heigoo/resume-highlight-extractor/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
+**在线体验：** https://heigoo.github.io/resume-highlight-extractor/
+
 把简历原文和目标岗位 JD 变成「可直接写进面试自我介绍」的亮点清单：AI 提炼 + 证据溯源 + 量化评分 + JD 对标缺口，全程本地运行，API Key 由你自己保管（BYOK）。
 
 ## 核心功能
