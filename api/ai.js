@@ -51,25 +51,15 @@ export async function POST(request) {
 
   // 直接转发字节流：上游 SSE 流式响应与普通 JSON 都原样透传，
   // 不做缓冲，保证前端流式渲染不被代理阻断。
-  // 注意：fetch 已自动解压响应体，必须剥掉 content-encoding / content-length /
-  // transfer-encoding 等实体与逐跳头，否则浏览器会按错误编码解码导致空响应
-  const headers = { 'Content-Type': res.headers.get('content-type') ?? 'application/json' }
-  res.headers.forEach((value, key) => {
-    const name = key.toLowerCase()
-    if (
-      name === 'content-type' ||
-      name === 'content-encoding' ||
-      name === 'content-length' ||
-      name === 'transfer-encoding' ||
-      name === 'connection' ||
-      name === 'keep-alive'
-    ) {
-      return
-    }
-    headers[key] = value
-  })
+  // 响应头按白名单只回传 Content-Type：fetch 已自动解压响应体，带上
+  // content-encoding / content-length 等上游实体头会让浏览器按错误编码解码；
+  // 更重要的是透传 Set-Cookie 会让（恶意或被入侵的）上游借本代理向
+  // 用户浏览器注入 Cookie（Cookie 固定 / 会话劫持），安全默认是一律丢弃
+  const headers = {
+    'Content-Type': res.headers.get('content-type') ?? 'application/json',
+    'Cache-Control': 'no-cache',
+  }
   if (res.body) {
-    headers['Cache-Control'] = 'no-cache'
     return new Response(res.body, { status: res.status, headers })
   }
   return new Response(await res.text(), { status: res.status, headers })
