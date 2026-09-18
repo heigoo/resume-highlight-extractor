@@ -3,6 +3,14 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- CSP 纵深防御：静态托管无法下发响应头，只能走 meta（frame-ancestors 等
+         指令在 meta 中无效，需托管层配置）。script-src 'self' 收紧 XSS 影响面；
+         style-src 允许内联是为打印 srcdoc 文档（继承本页 CSP）内嵌排版样式；
+         worker-src 覆盖 pdf.js 同源 worker；connect-src 仅放开同源 AI 代理 -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'self'"
+    />
     <meta
       name="description"
       content="把零散的工作记录提炼成简历可用的项目亮点：生成提炼指令发给 AI，回填结果自动分组，弱动词、待补数据、日期断档即时标出，一键导出。纯前端本地工具。"
