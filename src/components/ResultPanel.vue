@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, onUnmounted, ref, watch } from 'vue'
+import AlchemyCanvas from './AlchemyCanvas.vue'
 import Collapse from './Collapse.vue'
 import VerifyCard from './VerifyCard.vue'
 import { copyRichHtml, copyText } from '../lib/clipboard'
@@ -31,6 +32,12 @@ const props = defineProps<{
   configured: boolean
   /** 一键提炼进行中：版本/重写等 AI 操作统一禁用 */
   extracting: boolean
+  /** 「点铁成金」等待动画：种子（记录哈希） */
+  alchemySeed: number
+  /** 「点铁成金」等待动画：流式进度 0~0.92 */
+  extractProgress: number
+  /** 暗色模式（动画调色板随主题） */
+  isDark: boolean
   /** 正在重写中的条目 key（`${groupTitle}#${index}`） */
   rewritingKey: string | null
   /** 未命中关键词补充提炼进行中 */
@@ -110,6 +117,24 @@ const openPrev = ref<Record<string, boolean>>({})
 function togglePrev(key: string) {
   openPrev.value = { ...openPrev.value, [key]: !openPrev.value[key] }
 }
+
+// 「点铁成金」完成闪光：提炼结束且出了结果时，结果区扫过一次金色微光（纯装饰；减动态偏好下跳过）
+const alchemyFlash = ref(false)
+let alchemyFlashTimer: number | undefined
+
+watch(
+  () => props.extracting,
+  (busy) => {
+    if (busy) return
+    if (!props.parsed || props.parsed.groups.length === 0) return
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    window.clearTimeout(alchemyFlashTimer)
+    alchemyFlash.value = true
+    alchemyFlashTimer = window.setTimeout(() => {
+      alchemyFlash.value = false
+    }, 1300)
+  },
+)
 
 // ---------- 下一步动线：核查 → 导出（结果区顶部常驻一行） ----------
 const verifyBox = ref<HTMLElement | null>(null)
@@ -458,6 +483,7 @@ window.addEventListener('keydown', onDetailKeydown)
 onUnmounted(() => {
   window.removeEventListener('keydown', onDetailKeydown)
   window.clearTimeout(pulseTimer)
+  window.clearTimeout(alchemyFlashTimer)
 })
 
 // ---------- 面试追问面板 ----------
@@ -653,7 +679,13 @@ watch(
 
 <template>
   <div class="min-w-0 space-y-5">
-    <section v-if="parsed && parsed.groups.length" ref="resultBox" class="panel reveal p-4 sm:p-5">
+    <section v-if="parsed && parsed.groups.length" ref="resultBox" class="panel reveal relative p-4 sm:p-5">
+      <!-- 「点铁成金」收束：提炼完成瞬间扫过一次金色微光 -->
+      <div
+        v-if="alchemyFlash"
+        class="alchemy-flash pointer-events-none absolute inset-0 z-20 rounded-xl"
+        aria-hidden="true"
+      ></div>
       <!-- 一次性引导：只出现到用户点「知道了」为止，不重复打扰 -->
       <div
         v-if="showGuide"
@@ -1567,20 +1599,24 @@ watch(
 
     <section
       v-else-if="extracting"
-      class="reveal relative overflow-hidden rounded-xl border border-dashed border-jade/40 bg-jade/5 p-8 text-center"
+      class="reveal relative min-h-[280px] overflow-hidden rounded-xl border border-dashed border-jade/40 bg-jade/5 p-8 text-center sm:min-h-[320px]"
     >
-      <p class="relative flex items-center justify-center gap-2 text-sm text-jade" role="status">
-        <span class="inline-block h-2 w-2 animate-pulse rounded-full bg-jade" aria-hidden="true"></span>
-        正在提炼，生成内容将实时出现在这里…
-      </p>
-      <button
-        type="button"
-        class="link-btn mt-3"
-        title="中断本次提炼，已生成的部分保留在结果区"
-        @click="emit('stop')"
-      >
-         停止提炼
-      </button>
+      <!-- 「点铁成金」：粒子从混沌（流水账）冶炼成金色晶格（亮点）；p5 加载失败时静默隐藏，下方文案兜底 -->
+      <AlchemyCanvas :seed="alchemySeed" :progress="extractProgress" :dark="isDark" />
+      <div class="relative z-10 flex min-h-[216px] flex-col items-center justify-center gap-3 sm:min-h-[256px]">
+        <p class="flex items-center justify-center gap-2 text-sm text-jade" role="status">
+          <span class="inline-block h-2 w-2 animate-pulse rounded-full bg-jade" aria-hidden="true"></span>
+          正在提炼，生成内容将实时出现在这里…
+        </p>
+        <button
+          type="button"
+          class="link-btn"
+          title="中断本次提炼，已生成的部分保留在结果区"
+          @click="emit('stop')"
+        >
+           停止提炼
+        </button>
+      </div>
     </section>
 
     <section

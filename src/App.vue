@@ -21,6 +21,7 @@ import { buildExport } from './lib/export'
 import { loadDraft, saveDraft } from './lib/draft'
 import { loadStats, recordStat, recentCount, averageMs } from './lib/stats'
 import { SAMPLE_RECORDS } from './lib/samples'
+import { hashString, streamProgress } from './lib/alchemy'
 import {
   deleteVersion,
   listVersions,
@@ -233,6 +234,10 @@ watch(aiRaw, (raw) => {
 const jdKeywords = computed(() => (jd.value.trim() === '' ? [] : extractJdKeywords(jd.value).terms))
 // 流式提炼时已收到的字数（用于按钮区进度提示）
 const streamCount = computed(() => (extracting.value ? aiRaw.value.length : 0))
+
+// 「点铁成金」等待动画：种子=记录哈希（同记录同动画），进度=流式字符数饱和曲线
+const alchemySeed = computed(() => hashString(records.value))
+const extractProgress = computed(() => streamProgress(extracting.value ? aiRaw.value.length : 0))
 
 // ---------- 暗色模式（auto / dark / light 三态循环） ----------
 const themePref = ref<ThemePref>(loadThemePref())
@@ -1165,6 +1170,9 @@ function onFormat(enforceSources = false) {
             :jd-keywords="jdKeywords"
             :configured="!!aiSettings"
             :extracting="extracting"
+            :alchemy-seed="alchemySeed"
+            :extract-progress="extractProgress"
+            :is-dark="isDark"
             :rewriting-key="rewritingKey"
             :supplementing="supplementing"
             :interviewing="interviewing"

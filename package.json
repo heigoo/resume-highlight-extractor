@@ -15,12 +15,14 @@
   "dependencies": {
     "docx": "^9.7.1",
     "mammoth": "^1.12.3",
+    "p5": "^2.3.3",
     "pdfjs-dist": "^6.3.289",
     "vue": "^3.5.13"
   },
   "devDependencies": {
     "@playwright/test": "^1.63.0",
     "@tailwindcss/vite": "^4.0.0",
+    "@types/p5": "^1.7.7",
     "@vitejs/plugin-vue": "^5.2.1",
     "gifenc": "^1.0.3",
     "pngjs": "^7.0.0",

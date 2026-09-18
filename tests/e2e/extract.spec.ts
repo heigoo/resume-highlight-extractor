@@ -148,3 +148,32 @@ test('查看原始返回：结果区跳回左栏「备用」区原文编辑', as
   await expect(rawBox).toBeVisible()
   await expect(rawBox).toHaveValue(/新增能力/)
 })
+
+test('「点铁成金」等待动画：提炼中显示粒子画布，出结果后让位', async ({ page }) => {
+  await seedSettings(page)
+  await mockAi(page, { delayMs: 4000 })
+  await page.goto('/')
+  await fillRecords(page)
+  await page.getByRole('button', { name: /一键提炼/ }).click()
+
+  // 等待区：状态文案仍在（屏幕阅读器语义不变）+ p5 画布动态加载后出现
+  await expect(page.getByRole('status').filter({ hasText: '正在提炼' })).toBeVisible()
+  await expect(page.locator('canvas')).toBeVisible({ timeout: 8000 })
+
+  // 响应到达：结果区接管，画布卸载
+  await expect(page.getByRole('heading', { name: '提炼结果' })).toBeVisible({ timeout: 10000 })
+  await expect(page.locator('canvas')).toHaveCount(0)
+})
+
+test('「点铁成金」完成闪光：结果出现时扫过一次金色微光后消失', async ({ page }) => {
+  await seedSettings(page)
+  await mockAi(page, { delayMs: 2500 })
+  await page.goto('/')
+  await fillRecords(page)
+  await page.getByRole('button', { name: /一键提炼/ }).click()
+
+  // 提炼结束出结果：闪光覆盖层出现（约 1s 生命周期），随后自动移除
+  await expect(page.locator('.alchemy-flash')).toBeVisible({ timeout: 10000 })
+  await expect(page.getByRole('heading', { name: '提炼结果' })).toBeVisible()
+  await expect(page.locator('.alchemy-flash')).toHaveCount(0, { timeout: 4000 })
+})
