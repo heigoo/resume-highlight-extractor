@@ -76,7 +76,9 @@ export async function downloadDocx(
   downloadBlob(filename, await Packer.toBlob(doc))
 }
 
-// 打印 / 存 PDF：A4 排版写入隐藏 iframe 后调起系统打印（浏览器「另存为 PDF」）
+// 打印 / 存 PDF：A4 排版写入隐藏 iframe 后调起系统打印（浏览器「另存为 PDF」）。
+// 用 srcdoc 而非 document.write：内容虽经 esc() 全量转义，document.write 仍是
+// XSS 高危 sink；srcdoc 文档还继承本页 CSP，即使未来出现转义遗漏也无法执行脚本
 function printHtmlDocument(html: string): void {
   const iframe = document.createElement('iframe')
   iframe.setAttribute('aria-hidden', 'true')
@@ -86,22 +88,27 @@ function printHtmlDocument(html: string): void {
   iframe.style.width = '0'
   iframe.style.height = '0'
   iframe.style.border = '0'
-  document.body.appendChild(iframe)
 
-  const win = iframe.contentWindow
-  if (!win) {
-    iframe.remove()
-    return
+  let removed = false
+  const cleanup = (): void => {
+    if (!removed) {
+      removed = true
+      iframe.remove()
+    }
   }
-  const doc = win.document
-  doc.open()
-  doc.write(html)
-  doc.close()
-
-  win.addEventListener('afterprint', () => window.setTimeout(() => iframe.remove(), 300))
-  window.setTimeout(() => iframe.remove(), 60000) // 兜底清理
-  win.focus()
-  win.print()
+  iframe.addEventListener('load', () => {
+    const win = iframe.contentWindow
+    if (!win) {
+      cleanup()
+      return
+    }
+    win.addEventListener('afterprint', () => window.setTimeout(cleanup, 300))
+    win.focus()
+    win.print()
+  })
+  iframe.srcdoc = html
+  document.body.appendChild(iframe)
+  window.setTimeout(cleanup, 60000) // 兜底清理
 }
 
 export function printHighlights(parsed: Parsed, includeNotes: boolean): void {
